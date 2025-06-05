@@ -21,10 +21,11 @@ hdr = {
 clean = lambda txt: txt.replace("'", "").replace("[", "").replace("]", "")
 
 
-def get_all_boards(t_id, r_id):
+def get_all_boards(r_id):
     """
     Each game is a chess pgn separated by three new lines.
     """
+
     response = requests.get(
         f"https://lichess.org/api/broadcast/round/{r_id}.pgn",
         headers=hdr,
@@ -34,7 +35,7 @@ def get_all_boards(t_id, r_id):
     text = response.text
     games = text.split("\n\n\n")
 
-    fen_response = get_round_info(t_id, r_id)
+    fen_response = get_round_info(r_id)
     rnd_info = fen_response.json()
     rnd_info = rnd_info["games"]
 
@@ -86,8 +87,7 @@ def get_all_boards(t_id, r_id):
     return response
 
 
-def get_round_info(t_id, r_id):
-    # hdr = { "Content-type": "application/json", }
+def get_round_info(r_id):
     response = requests.get(
         f"https://lichess.org/api/broadcast/-/-/{r_id}",
         headers=hdr,
@@ -103,14 +103,19 @@ def get_broadcast_info(t_id):
         headers=hdr,
         params=params,
     )
-    response.encoding = "utf-8"
-    text = response.text
-    pprint(response.text)
 
-    return response
+    rounds = response.json()["rounds"]
+
+    r_ids = []
+    for r in rounds:
+        r_ids.append(r["id"])
+
+    return t_id, r_ids
 
 
-def get_all_official_broadcasts(top_broadcasts_only: bool = False):
+def get_all_official_broadcasts(
+    top_broadcasts_only: bool = False, show_info: bool = False
+):
 
     if top_broadcasts_only:
         request = f"https://lichess.org/api/broadcast/top"
@@ -149,11 +154,11 @@ def get_all_official_broadcasts(top_broadcasts_only: bool = False):
             info += f"Description:\n                             \n"
 
         info += "--------------------==\n"
-        choices[tour['tour']['id']] = info
+        choices[tour["tour"]["id"]] = info
 
-        print(info)
+        if show_info:
+            print(info)
 
-    # print(choices)
     return choices
 
 
@@ -171,10 +176,10 @@ def get_game_stream(pgn):
 
 
 def main() -> None:
-    pgn = "GdK93YSo"  # https://lichess.org/api/stream/broadcast/round/{broadcastRoundId}.pgn"
-    get_all_official_broadcasts(top_broadcasts_only=True)
-    # get_round_info(t_id, r_id)
-    # get_all_boards(t_id, r_id)
+    choices = get_all_official_broadcasts(top_broadcasts_only=True)
+    active_tournaments = list(choices.keys())
+    t_id, r_ids = get_broadcast_info(active_tournaments[2])
+    get_all_boards(r_ids[0])
 
 
 if __name__ == "__main__":
