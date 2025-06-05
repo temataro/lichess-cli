@@ -93,8 +93,6 @@ def get_round_info(t_id, r_id):
         headers=hdr,
         params=params,
     )
-    response.encoding = "utf-8"
-    text = response.text
 
     return response
 
