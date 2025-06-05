@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
+import os
 import json
 import requests
 
 from pprint import pprint
+from dotenv import load_dotenv
 
 from utils import *
 
 
+load_dotenv()
 # ---
-params: dict[str, str] = {"access_token": "lip_DRS4U0s4YIsll0dMv5h2"}
+params: dict[str, str] = {"access_token": os.getenv("API_KEY")}
 hdr = {
     "Content-type": "application/x-ndjson",  # This is what you probably wanted
 }
