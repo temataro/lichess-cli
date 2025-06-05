@@ -16,9 +16,13 @@ t_id = "KR9KTNuj"
 r_id = "NmUtGXny"  # parsed from the info in /api/broadcast/{t_id}
 # ---
 
+clean = lambda txt: txt.replace("'", "").replace("[", "").replace("]", "")
+
 
 def get_all_pgns(t_id, r_id):
-    # hdr = { "Content-type": "application/json", }
+    """
+    Each game is a chess pgn separated by three new lines.
+    """
     response = requests.get(
         f"https://lichess.org/api/broadcast/round/{r_id}.pgn",
         headers=hdr,
@@ -26,7 +30,16 @@ def get_all_pgns(t_id, r_id):
     )
     response.encoding = "utf-8"
     text = response.text
-    pprint(response.text)
+    games = text.split("\n\n\n")
+
+    print(f"[INFO] Number of games: {len(games)}\n")
+    for game in games:
+        game = game.split("\n")
+        if len(game) < 22:
+            continue
+        info = f"{clean(game[0])}, {clean(game[1])}"
+        players = f"{clean(game[2])}\t\t\t{clean(game[3])}"
+        print(f"[GAME INFO] \n" f"       {info}\n" f"       {players}")
 
     return response
 
