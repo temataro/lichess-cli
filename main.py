@@ -5,6 +5,8 @@ import requests
 
 from pprint import pprint
 
+from utils import *
+
 
 # ---
 params: dict[str, str] = {"access_token": "lip_DRS4U0s4YIsll0dMv5h2"}
@@ -76,7 +78,7 @@ def get_all_boards(t_id, r_id):
         pgn = game[-1]
 
         print(f"[GAME INFO] \n" f"       {info}\n" f"       {players}")
-        print(f"\t{fen=}\n===")
+        draw_board(fen)
 
         # tmp
         print(game[20])
