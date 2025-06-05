@@ -14,11 +14,8 @@ load_dotenv()
 # ---
 params: dict[str, str] = {"access_token": os.getenv("API_KEY")}
 hdr = {
-    "Content-type": "application/x-ndjson",  # This is what you probably wanted
+    "Content-type": "application/x-ndjson",  # This is what you probably wanted as default
 }
-
-t_id = "KR9KTNuj"
-r_id = "NmUtGXny"  # parsed from the info in /api/broadcast/{t_id}
 # ---
 
 clean = lambda txt: txt.replace("'", "").replace("[", "").replace("]", "")
@@ -116,10 +113,17 @@ def get_broadcast_info(t_id):
 
 
 def get_all_official_broadcasts(top_broadcasts_only: bool = False):
+
     if top_broadcasts_only:
         request = f"https://lichess.org/api/broadcast/top"
+        hdr = {
+            "Content-type": "application/json",  # This is what you probably wanted
+        }
     else:
         request = f"https://lichess.org/api/broadcast"
+        hdr = {
+            "Content-type": "application/x-ndjson",  # This is what you probably wanted
+        }
 
     response = requests.get(
         request,
@@ -128,9 +132,31 @@ def get_all_official_broadcasts(top_broadcasts_only: bool = False):
     )
     response.encoding = "utf-8"
     text = response.text
-    pprint(response.text)
+    active_tournaments = response.json()["active"]
 
-    return response
+    choices = {}
+    for t, tour in enumerate(active_tournaments):
+        # All possible keys to extract from tour['tour']. Description is
+        # sometimes missing.
+        # dict_keys(['id', 'name', 'slug', 'info', 'createdAt', 'url', 'tier',
+        # 'dates', 'image', 'description'])
+
+        info = ""
+        info += f"[TOURNAMENT INFO] #{t+1}===\n{tour['tour']['name']}\n"
+        info += f"Time Control: {tour['tour']['info']['fideTc']}\n"
+        info += f"Completed till {tour['round']['name']}\n\n"
+        try:
+            info += f"Description:\n{tour['tour']['description']}\n"
+        except:
+            info += f"Description:\n                             \n"
+
+        info += "--------------------==\n"
+        choices[tour['tour']['id']] = info
+
+        print(info)
+
+    # print(choices)
+    return choices
 
 
 def get_game_stream(pgn):
@@ -148,9 +174,9 @@ def get_game_stream(pgn):
 
 def main() -> None:
     pgn = "GdK93YSo"  # https://lichess.org/api/stream/broadcast/round/{broadcastRoundId}.pgn"
-    # get_all_official_broadcasts()
+    get_all_official_broadcasts(top_broadcasts_only=True)
     # get_round_info(t_id, r_id)
-    get_all_boards(t_id, r_id)
+    # get_all_boards(t_id, r_id)
 
 
 if __name__ == "__main__":
